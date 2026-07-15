@@ -17,46 +17,56 @@ public class TaxiPool {
         inUse.remove(taxi);
         available.add(taxi);
         System.out.println(taxi.getName() + " is free");
+        notifyAll();
     }
 
     public synchronized Taxi getTaxi() {
         if (!available.isEmpty()) {
-            Taxi taxi = available.get(0);
+            Taxi taxi = available.remove(0);
             inUse.add(taxi);
-            available.remove(taxi);
             return taxi;
         }
-        if (count.get() == NUMBER_OF_TAXI) {
-            this.waitingUntilTaxiAvailable();
-            return this.getTaxi();
+
+        if (count.get() < NUMBER_OF_TAXI) {
+            Taxi taxi = this.createTaxi();
+            inUse.add(taxi);
+            return taxi;
         }
-        Taxi taxi = this.createTaxi();
+
+        System.out.println(Thread.currentThread().getName() + " is waiting for a taxi...");
+        long startTime = System.currentTimeMillis();
+        long timeLeft = EXPIRED_TIME_IN_MILLISECOND;
+
+        while (available.isEmpty()) {
+            try {
+                wait(timeLeft);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new TaxiNotFoundException("Thread interrupted while waiting for taxi");
+            }
+
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            timeLeft = EXPIRED_TIME_IN_MILLISECOND - elapsedTime;
+
+            if (timeLeft <= 0 && available.isEmpty()) {
+                throw new TaxiNotFoundException(
+                        ">>> Timeout! No taxi available for " + Thread.currentThread().getName());
+            }
+        }
+
+        Taxi taxi = available.remove(0);
         inUse.add(taxi);
         return taxi;
     }
 
     private Taxi createTaxi() {
-        waiting(200);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         Taxi taxi = new Taxi("Taxi " + count.incrementAndGet());
         System.out.println(taxi.getName() + " isCreated");
         return taxi;
-    }
-
-    private void waitingUntilTaxiAvailable() {
-        if (waiting.get()) {
-            waiting.set(false);
-            throw new TaxiNotFoundException("No taxi avaiable");
-        }
-        waiting.set(true);
-        waiting(EXPIRED_TIME_IN_MILISECOND);
-    }
-
-    private void waiting(long time) {
-        try {
-            TimeUnit.MILLISECONDS.sleep(time);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            Thread.currentThread().interrupt();
-        }
     }
 }
