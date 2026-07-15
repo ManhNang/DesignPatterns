@@ -23,6 +23,7 @@ public class TaxiPool {
         if (!available.isEmpty()) {
             Taxi taxi = available.get(0);
             inUse.add(taxi);
+            available.remove(taxi);
             return taxi;
         }
         if (count.get() == NUMBER_OF_TAXI) {

@@ -23,6 +23,7 @@ public class TaxiThread implements Runnable {
         } catch (InterruptedException | TaxiNotFoundException e) {
             System.out.println(">>>Rejected the client: " + Thread.currentThread().getName());
         }
+
     }
 
     private int randInt(int min, int max) {
