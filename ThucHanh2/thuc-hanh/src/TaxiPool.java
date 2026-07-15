@@ -6,12 +6,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaxiPool {
-    private static final long EXPIRED_TIME_IN_MILISECOND = 60000;
+    private static final long EXPIRED_TIME_IN_MILISECOND = 1200;
     private static final int NUMBER_OF_TAXI = 4;
     private final List<Taxi> available = Collections.synchronizedList(new ArrayList<>());
     private final List<Taxi> inUse = Collections.synchronizedList(new ArrayList<>());
     private final AtomicInteger count = new AtomicInteger(0);
-    private final AtomicBoolean waiting = new AtomicBoolean(false);
 
     public synchronized void release(Taxi taxi) {
         inUse.remove(taxi);
@@ -33,9 +32,14 @@ public class TaxiPool {
             return taxi;
         }
 
-        System.out.println(Thread.currentThread().getName() + " is waiting for a taxi...");
+        return waitingUntilTaxiAvailable();
+    }
+
+    private Taxi waitingUntilTaxiAvailable() {
         long startTime = System.currentTimeMillis();
         long timeLeft = EXPIRED_TIME_IN_MILLISECOND;
+
+        System.out.println(Thread.currentThread().getName() + " is waiting for a taxi...");
 
         while (available.isEmpty()) {
             try {
