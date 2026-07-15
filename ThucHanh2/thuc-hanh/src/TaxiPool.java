@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaxiPool {
-    private static final long EXPIRED_TIME_IN_MILISECOND = 1200;
+    private static final long EXPIRED_TIME_IN_MILISECOND = 60000;
     private static final int NUMBER_OF_TAXI = 4;
     private final List<Taxi> available = Collections.synchronizedList(new ArrayList<>());
     private final List<Taxi> inUse = Collections.synchronizedList(new ArrayList<>());
