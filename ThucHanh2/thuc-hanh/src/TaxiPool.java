@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaxiPool {
-    private static final long EXPIRED_TIME_IN_MILISECOND = 1200;
+    private static final long EXPIRED_TIME_IN_MILISECOND = 60000;
     private static final int NUMBER_OF_TAXI = 4;
     private final List<Taxi> available = Collections.synchronizedList(new ArrayList<>());
     private final List<Taxi> inUse = Collections.synchronizedList(new ArrayList<>());
@@ -32,12 +32,8 @@ public class TaxiPool {
             return taxi;
         }
 
-        return waitingUntilTaxiAvailable();
-    }
-
-    private Taxi waitingUntilTaxiAvailable() {
         long startTime = System.currentTimeMillis();
-        long timeLeft = EXPIRED_TIME_IN_MILLISECOND;
+        long timeLeft = EXPIRED_TIME_IN_MILISECOND;
 
         System.out.println(Thread.currentThread().getName() + " is waiting for a taxi...");
 
@@ -46,11 +42,11 @@ public class TaxiPool {
                 wait(timeLeft);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new TaxiNotFoundException("Thread interrupted while waiting for taxi");
+                throw new TaxiNotFoundException("Thread interrupted while waiting");
             }
 
             long elapsedTime = System.currentTimeMillis() - startTime;
-            timeLeft = EXPIRED_TIME_IN_MILLISECOND - elapsedTime;
+            timeLeft = EXPIRED_TIME_IN_MILISECOND - elapsedTime;
 
             if (timeLeft <= 0 && available.isEmpty()) {
                 throw new TaxiNotFoundException(
@@ -64,11 +60,6 @@ public class TaxiPool {
     }
 
     private Taxi createTaxi() {
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
         Taxi taxi = new Taxi("Taxi " + count.incrementAndGet());
         System.out.println(taxi.getName() + " isCreated");
         return taxi;
